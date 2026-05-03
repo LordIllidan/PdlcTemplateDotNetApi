@@ -14,11 +14,16 @@ Base .NET API template for PDLC-managed services.
 - `src/Pdlc.Template.Api`: API project.
 - `tests/Pdlc.Template.Api.Tests`: behavior tests.
 - `tests/Pdlc.Template.Architecture.Tests`: architecture tests.
+- `scripts/ci`: static CI validation scripts.
+- `docs/changes`: change documentation required by quality gates.
 
 ## Local Commands
 
 - `dotnet build --configuration Release`
 - `dotnet test --configuration Release`
+- `pwsh scripts/ci/Test-PowerShellSyntax.ps1`
+- `pwsh scripts/ci/Test-ContextDocs.ps1`
+- `pwsh scripts/ci/Test-ChangeDocs.ps1`
 
 ## Decisions
 
@@ -29,3 +34,5 @@ Base .NET API template for PDLC-managed services.
 
 - `src/context.md`
 - `tests/context.md`
+- `docs/context.md`
+- `scripts/context.md`

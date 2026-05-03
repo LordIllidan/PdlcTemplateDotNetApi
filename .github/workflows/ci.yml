@@ -7,15 +7,67 @@ on:
 
 permissions:
   contents: read
+  security-events: write
+
+env:
+  ENABLE_SONAR: ${{ vars.ENABLE_SONAR || 'false' }}
+  ENABLE_DOTNET_FORMAT: ${{ vars.ENABLE_DOTNET_FORMAT || 'false' }}
+  ENABLE_GITLEAKS: ${{ vars.ENABLE_GITLEAKS || 'false' }}
+  ENABLE_CODEQL: ${{ vars.ENABLE_CODEQL || 'false' }}
 
 jobs:
   ci:
+    name: Build, tests, architecture and static gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
-      - run: dotnet build --configuration Release --no-restore
-      - run: dotnet test --configuration Release --no-build --logger trx
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Unit and architecture tests
+        run: dotnet test --configuration Release --no-build --logger trx
+      - name: PowerShell syntax
+        shell: pwsh
+        run: ./scripts/ci/Test-PowerShellSyntax.ps1
+      - name: Context documentation gate
+        shell: pwsh
+        run: ./scripts/ci/Test-ContextDocs.ps1
+      - name: Change documentation gate
+        shell: pwsh
+        run: ./scripts/ci/Test-ChangeDocs.ps1
+      - name: Optional dotnet format
+        if: env.ENABLE_DOTNET_FORMAT == 'true'
+        run: dotnet format --verify-no-changes
+      - name: Optional Sonar scan
+        if: env.ENABLE_SONAR == 'true'
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+      - name: Optional Gitleaks secret scan
+        if: env.ENABLE_GITLEAKS == 'true'
+        uses: gitleaks/gitleaks-action@v2
+
+  codeql:
+    name: Optional CodeQL
+    if: ${{ vars.ENABLE_CODEQL == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+      - uses: github/codeql-action/analyze@v3
