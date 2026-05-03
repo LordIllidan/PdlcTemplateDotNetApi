@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Pdlc.Template.Api/Pdlc.Template.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Pdlc.Template.Api.Tests/Pdlc.Template.Api.Tests.csproj" />
+    <Project Path="tests/Pdlc.Template.Architecture.Tests/Pdlc.Template.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>
